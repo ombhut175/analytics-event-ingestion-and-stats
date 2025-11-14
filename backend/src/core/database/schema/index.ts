@@ -1,11 +1,17 @@
 import { healthChecking } from './health-checking';
 import { users } from './users';
+import { rawEvents } from './raw-events';
+import { siteDailyAggregates } from './site-daily-aggregates';
+import { siteDailyPathCounts } from './site-daily-path-counts';
+import { siteDailyUniqueUsers } from './site-daily-unique-users';
 
-// Schema exports
 export const schema = {
   healthChecking,
   users,
+  rawEvents,
+  siteDailyAggregates,
+  siteDailyPathCounts,
+  siteDailyUniqueUsers,
 };
 
-// Export individual tables for convenience
-export { healthChecking, users };
+export { healthChecking, users, rawEvents, siteDailyAggregates, siteDailyPathCounts, siteDailyUniqueUsers };
