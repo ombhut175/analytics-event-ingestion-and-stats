@@ -5,7 +5,6 @@ import { QUEUES } from '../../../../common/constants/string-const';
 import {
   AnalyticsEventJobName,
   ProcessEventPayload,
-  BatchProcessPayload,
 } from './analytics-events.types';
 
 @Injectable()
@@ -21,51 +20,21 @@ export class AnalyticsEventsQueue {
     payload: ProcessEventPayload,
     options?: JobsOptions,
   ): Promise<string> {
-    this.logger.log('Adding process event job', {
-      eventType: payload.eventType,
-      eventId: payload.eventId,
-      userId: payload.userId,
-    });
-
     const job = await this.queue.add(
       AnalyticsEventJobName.PROCESS_EVENT,
       payload,
       {
         priority: 1,
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
         ...options,
       },
     );
-
-    this.logger.log(`Job added successfully with ID: ${job.id}`, {
-      jobId: job.id,
-      eventId: payload.eventId,
-    });
-
-    return job.id as string;
-  }
-
-  async addBatchProcessJob(
-    payload: BatchProcessPayload,
-    options?: JobsOptions,
-  ): Promise<string> {
-    this.logger.log('Adding batch process job', {
-      batchId: payload.batchId,
-      eventCount: payload.eventIds.length,
-    });
-
-    const job = await this.queue.add(
-      AnalyticsEventJobName.BATCH_PROCESS,
-      payload,
-      {
-        priority: 5,
-        ...options,
-      },
-    );
-
-    this.logger.log(`Batch job added successfully with ID: ${job.id}`, {
-      jobId: job.id,
-      batchId: payload.batchId,
-    });
 
     return job.id as string;
   }

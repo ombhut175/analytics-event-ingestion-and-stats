@@ -1,7 +1,6 @@
-import { Controller, Get, Param, Post, Body, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, Post, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AnalyticsEventsQueue } from './queues/analytics-events/analytics-events.queue';
-import { ProcessEventDto, BatchProcessDto } from './dto/analytics-events.dto';
 
 @ApiTags('Queue Management')
 @Controller('queues')
@@ -36,43 +35,6 @@ export class BullmqHealthController {
     }
 
     return status;
-  }
-
-  @Post('test/process-event')
-  @ApiOperation({ summary: 'Test endpoint to enqueue an analytics event' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Event job created' })
-  async testProcessEvent(@Body() dto: ProcessEventDto) {
-    const jobId = await this.analyticsEventsQueue.addProcessEventJob({
-      eventId: dto.eventId,
-      eventType: dto.eventType,
-      userId: dto.userId,
-      sessionId: dto.sessionId,
-      timestamp: new Date(dto.timestamp),
-      properties: dto.properties,
-      metadata: dto.metadata,
-    });
-
-    return {
-      message: 'Event job created successfully',
-      jobId,
-    };
-  }
-
-  @Post('test/batch-process')
-  @ApiOperation({ summary: 'Test endpoint to enqueue a batch processing job' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Batch job created' })
-  async testBatchProcess(@Body() dto: BatchProcessDto) {
-    const jobId = await this.analyticsEventsQueue.addBatchProcessJob({
-      batchId: dto.batchId,
-      eventIds: dto.eventIds,
-      timestamp: new Date(),
-    });
-
-    return {
-      message: 'Batch job created successfully',
-      jobId,
-      eventCount: dto.eventIds.length,
-    };
   }
 
   @Post('pause')

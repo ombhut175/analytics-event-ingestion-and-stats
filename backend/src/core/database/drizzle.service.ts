@@ -62,6 +62,10 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
     return this.db;
   }
 
+  getDb() {
+    return this.db;
+  }
+
   getPool() {
     return this.pool;
   }

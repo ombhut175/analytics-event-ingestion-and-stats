@@ -10,9 +10,11 @@ import { getBullConfig } from './bull.config';
 import { AnalyticsEventsQueue } from './queues/analytics-events/analytics-events.queue';
 import { AnalyticsEventsProcessor } from './queues/analytics-events/analytics-events.processor';
 import { BullmqHealthController } from './bullmq-health.controller';
+import { DatabaseModule } from '../../core/database/database.module';
 
 @Module({
   imports: [
+    DatabaseModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) =>

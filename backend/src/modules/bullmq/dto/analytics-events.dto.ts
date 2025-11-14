@@ -3,72 +3,65 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
-  IsObject,
-  IsArray,
   IsDateString,
+  IsUUID,
 } from 'class-validator';
 
-export class ProcessEventDto {
-  @ApiProperty({ description: 'Unique event identifier', example: 'evt_12345' })
+export class IngestEventDto {
+  @ApiProperty({
+    description: 'Site identifier',
+    example: 'site_abc123',
+  })
   @IsString()
   @IsNotEmpty()
-  eventId: string;
+  siteId: string;
 
   @ApiProperty({
-    description: 'Type of the analytics event',
+    description: 'Type of analytics event',
     example: 'page_view',
   })
   @IsString()
   @IsNotEmpty()
   eventType: string;
 
-  @ApiPropertyOptional({ description: 'User identifier', example: 'user_123' })
-  @IsString()
-  @IsOptional()
-  userId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Session identifier',
-    example: 'session_456',
+  @ApiProperty({
+    description: 'URL path being tracked',
+    example: '/products/shoes',
   })
   @IsString()
-  @IsOptional()
-  sessionId?: string;
+  @IsNotEmpty()
+  path: string;
 
   @ApiProperty({
-    description: 'Event timestamp',
+    description: 'Event timestamp in ISO 8601 format',
     example: '2024-11-14T09:00:00Z',
   })
   @IsDateString()
   timestamp: string;
 
-  @ApiProperty({
-    description: 'Event properties',
-    example: { page: '/home', referrer: 'google.com' },
-  })
-  @IsObject()
-  properties: Record<string, unknown>;
-
   @ApiPropertyOptional({
-    description: 'Additional metadata',
-    example: { source: 'web', version: '1.0' },
+    description: 'Unique event identifier (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  @IsObject()
+  @IsUUID()
   @IsOptional()
-  metadata?: Record<string, unknown>;
+  eventId?: string;
 }
 
-export class BatchProcessDto {
-  @ApiProperty({ description: 'Unique batch identifier', example: 'batch_789' })
+export class StatsQueryDto {
+  @ApiProperty({
+    description: 'Site identifier',
+    example: 'site_abc123',
+  })
   @IsString()
   @IsNotEmpty()
-  batchId: string;
+  siteId: string;
 
   @ApiProperty({
-    description: 'Array of event IDs to process',
-    example: ['evt_1', 'evt_2', 'evt_3'],
+    description: 'Date to query stats for (YYYY-MM-DD)',
+    example: '2024-11-14',
   })
-  @IsArray()
-  @IsString({ each: true })
-  eventIds: string[];
+  @IsString()
+  @IsNotEmpty()
+  date: string;
 }

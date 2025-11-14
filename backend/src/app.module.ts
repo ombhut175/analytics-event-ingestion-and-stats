@@ -7,6 +7,8 @@ import { DatabaseModule } from './core/database/database.module';
 import { TestModule } from './modules/test/test.module';
 import { HealthCheckModule } from './modules/health-check/health-check.module';
 import { BullmqModule } from './modules/bullmq/bullmq.module';
+import { IngestionModule } from './modules/ingestion/ingestion.module';
+import { ReportingModule } from './modules/reporting/reporting.module';
 import { envValidationSchema } from './config/env.validation';
 
 @Module({
@@ -24,6 +26,8 @@ import { envValidationSchema } from './config/env.validation';
     TestModule,
     HealthCheckModule,
     BullmqModule,
+    IngestionModule,
+    ReportingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

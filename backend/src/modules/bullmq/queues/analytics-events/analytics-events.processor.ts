@@ -1,165 +1,149 @@
 import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject } from '@nestjs/common';
 import { Job } from 'bullmq';
+import { and, eq, sql } from 'drizzle-orm';
+import { PgTransaction } from 'drizzle-orm/pg-core';
+import { NodePgQueryResultHKT } from 'drizzle-orm/node-postgres';
+import { ExtractTablesWithRelations } from 'drizzle-orm';
 import { QUEUES } from '../../../../common/constants/string-const';
+import { ProcessEventPayload } from './analytics-events.types';
+import { DrizzleService } from '../../../../core/database/drizzle.service';
 import {
-  AnalyticsEventJobName,
-  ProcessEventPayload,
-  BatchProcessPayload,
-  AnalyticsEventJobPayload,
-} from './analytics-events.types';
+  rawEvents,
+  siteDailyAggregates,
+  siteDailyPathCounts,
+  siteDailyUniqueUsers,
+} from '../../../../core/database/schema';
 
-@Processor(QUEUES.ANALYTICS_EVENTS)
+@Processor(QUEUES.ANALYTICS_EVENTS, {
+  concurrency: 10,
+})
 export class AnalyticsEventsProcessor extends WorkerHost {
   private readonly logger = new Logger(AnalyticsEventsProcessor.name);
 
-  async process(job: Job<AnalyticsEventJobPayload>): Promise<unknown> {
-    this.logger.log(`Processing job ${job.id} (${job.name})`, {
-      jobId: job.id,
-      jobName: job.name,
-      attemptsMade: job.attemptsMade,
-    });
+  constructor(
+    @Inject(DrizzleService)
+    private readonly drizzleService: DrizzleService,
+  ) {
+    super();
+  }
+
+  async process(job: Job<ProcessEventPayload>): Promise<{ success: boolean }> {
+    const { eventId, siteId, eventType, path, timestamp, visitorId } = job.data;
+
+    const db = this.drizzleService.getDb();
+    const eventDate = new Date(timestamp).toISOString().split('T')[0];
+
+    this.logger.log(`Processing event: ${eventId}, visitorId: ${visitorId}, siteId: ${siteId}, date: ${eventDate}`);
 
     try {
-      switch (job.name as AnalyticsEventJobName) {
-        case AnalyticsEventJobName.PROCESS_EVENT:
-          return await this.processEvent(job as Job<ProcessEventPayload>);
+      await db.transaction(async (tx: PgTransaction<NodePgQueryResultHKT, Record<string, never>, ExtractTablesWithRelations<Record<string, never>>>) => {
+        await tx
+          .insert(rawEvents)
+          .values({
+            eventId,
+            siteId,
+            eventType,
+            path,
+            visitorId,
+            eventTs: new Date(timestamp),
+          })
+          .onConflictDoNothing();
 
-        case AnalyticsEventJobName.BATCH_PROCESS:
-          return await this.batchProcess(job as Job<BatchProcessPayload>);
+        await tx
+          .insert(siteDailyAggregates)
+          .values({
+            siteId,
+            date: eventDate,
+            totalViews: 1,
+            uniqueUsers: 0,
+          })
+          .onConflictDoUpdate({
+            target: [siteDailyAggregates.siteId, siteDailyAggregates.date],
+            set: {
+              totalViews: sql`${siteDailyAggregates.totalViews} + 1`,
+            },
+          });
 
-        default:
-          throw new Error(`Unknown job name: ${job.name}`);
-      }
+        await tx
+          .insert(siteDailyPathCounts)
+          .values({
+            siteId,
+            date: eventDate,
+            path,
+            views: 1,
+          })
+          .onConflictDoUpdate({
+            target: [
+              siteDailyPathCounts.siteId,
+              siteDailyPathCounts.date,
+              siteDailyPathCounts.path,
+            ],
+            set: {
+              views: sql`${siteDailyPathCounts.views} + 1`,
+            },
+          });
+
+        this.logger.log(`Attempting to insert unique user: siteId=${siteId}, date=${eventDate}, visitorId=${visitorId}`);
+        
+        const insertResult = await tx
+          .insert(siteDailyUniqueUsers)
+          .values({
+            siteId,
+            date: eventDate,
+            visitorId,
+          })
+          .onConflictDoNothing()
+          .returning({ siteId: siteDailyUniqueUsers.siteId });
+
+        this.logger.log(`Unique user insert result length: ${insertResult.length}`);
+
+        if (insertResult.length > 0) {
+          this.logger.log(`New unique user detected! Incrementing uniqueUsers counter`);
+          await tx
+            .update(siteDailyAggregates)
+            .set({
+              uniqueUsers: sql`${siteDailyAggregates.uniqueUsers} + 1`,
+            })
+            .where(
+              and(
+                eq(siteDailyAggregates.siteId, siteId),
+                eq(siteDailyAggregates.date, eventDate),
+              ),
+            );
+        } else {
+          this.logger.log(`Duplicate visitor detected - not incrementing uniqueUsers`);
+        }
+      });
+
+      return { success: true };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
       this.logger.error(`Job ${job.id} processing failed`, {
         jobId: job.id,
-        jobName: job.name,
+        eventId,
+        siteId,
         error: errorMessage,
-        stack: errorStack,
       });
       throw error;
     }
   }
 
-  private async processEvent(
-    job: Job<ProcessEventPayload>,
-  ): Promise<{ success: boolean; eventId: string }> {
-    const { eventId, eventType, userId, sessionId, timestamp } = job.data;
-
-    this.logger.log(`Processing analytics event`, {
-      jobId: job.id,
-      eventId,
-      eventType,
-      userId,
-      sessionId,
-      timestamp,
-    });
-
-    await job.updateProgress(25);
-
-    await this.simulateProcessing(500);
-
-    await job.updateProgress(50);
-
-    this.logger.log(`Event processed successfully`, {
-      jobId: job.id,
-      eventId,
-      eventType,
-    });
-
-    await job.updateProgress(100);
-
-    return {
-      success: true,
-      eventId,
-    };
-  }
-
-  private async batchProcess(
-    job: Job<BatchProcessPayload>,
-  ): Promise<{ success: boolean; processedCount: number }> {
-    const { batchId, eventIds } = job.data;
-
-    this.logger.log(`Processing batch of events`, {
-      jobId: job.id,
-      batchId,
-      eventCount: eventIds.length,
-    });
-
-    let processedCount = 0;
-    const totalEvents = eventIds.length;
-
-    for (const eventId of eventIds) {
-      await this.simulateProcessing(100);
-      processedCount++;
-
-      const progress = Math.round((processedCount / totalEvents) * 100);
-      await job.updateProgress(progress);
-
-      this.logger.debug(
-        `Processed event ${eventId} (${processedCount}/${totalEvents})`,
-      );
-    }
-
-    this.logger.log(`Batch processed successfully`, {
-      jobId: job.id,
-      batchId,
-      processedCount,
-    });
-
-    return {
-      success: true,
-      processedCount,
-    };
-  }
-
-  private async simulateProcessing(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   @OnWorkerEvent('completed')
   onCompleted(job: Job) {
-    this.logger.log(`Job completed successfully`, {
+    this.logger.debug(`Job completed`, {
       jobId: job.id,
-      jobName: job.name,
-      finishedOn: job.finishedOn,
-      returnvalue: job.returnvalue,
+      eventId: job.data.eventId,
     });
   }
 
   @OnWorkerEvent('failed')
   onFailed(job: Job, error: Error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    
     this.logger.error(`Job failed`, {
       jobId: job.id,
-      jobName: job.name,
+      eventId: job.data.eventId,
+      error: error.message,
       attemptsMade: job.attemptsMade,
-      error: errorMessage,
-      stack: errorStack,
-      failedReason: job.failedReason,
-    });
-  }
-
-  @OnWorkerEvent('active')
-  onActive(job: Job) {
-    this.logger.debug(`Job started processing`, {
-      jobId: job.id,
-      jobName: job.name,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  @OnWorkerEvent('progress')
-  onProgress(job: Job, progress: number | object) {
-    this.logger.debug(`Job progress update`, {
-      jobId: job.id,
-      progress,
     });
   }
 }
