@@ -13,13 +13,16 @@ export class TestService {
 
   async testDatabaseConnection() {
     try {
-      this.logger.log('Database connection infrastructure is ready. Models will be created when needed.');
+      this.logger.log(
+        'Database connection infrastructure is ready. Models will be created when needed.',
+      );
 
       return {
         success: true,
         message: 'Database infrastructure is ready',
         data: {
-          message: 'Database connection service is configured and ready to use when models are created',
+          message:
+            'Database connection service is configured and ready to use when models are created',
         },
       };
     } catch (error) {
@@ -34,19 +37,24 @@ export class TestService {
       const testService = 'health_check_test';
       const testStatus = 'testing';
 
-      this.logger.log('Starting health check test - adding record to health_checking table');
+      this.logger.log(
+        'Starting health check test - adding record to health_checking table',
+      );
 
       // Add a test record
-      const insertResult = await db.insert(healthChecking).values({
-        service: testService,
-        status: testStatus,
-        message: 'Test health check record',
-        details: {
-          timestamp: new Date().toISOString(),
-          operation: 'insert',
-          test: true,
-        },
-      }).returning({ id: healthChecking.id });
+      const insertResult = await db
+        .insert(healthChecking)
+        .values({
+          service: testService,
+          status: testStatus,
+          message: 'Test health check record',
+          details: {
+            timestamp: new Date().toISOString(),
+            operation: 'insert',
+            test: true,
+          },
+        })
+        .returning({ id: healthChecking.id });
 
       const insertedId = insertResult[0]?.id;
       this.logger.log(`Test record inserted with ID: ${insertedId}`);
@@ -75,7 +83,9 @@ export class TestService {
         throw new Error('Failed to delete test record');
       }
 
-      this.logger.log(`Test record deleted successfully with ID: ${insertedId}`);
+      this.logger.log(
+        `Test record deleted successfully with ID: ${insertedId}`,
+      );
 
       // Verify the record was deleted
       const verifyDelete = await db

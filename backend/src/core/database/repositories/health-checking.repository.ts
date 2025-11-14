@@ -29,7 +29,9 @@ export class HealthCheckingRepository extends BaseRepository<HealthCheckRecord> 
   }
 
   async create(data: CreateHealthCheckDto): Promise<HealthCheckRecord> {
-    this.logger.log(`Creating health check record for service: ${data.service}`);
+    this.logger.log(
+      `Creating health check record for service: ${data.service}`,
+    );
 
     try {
       const result = await this.db
@@ -45,7 +47,10 @@ export class HealthCheckingRepository extends BaseRepository<HealthCheckRecord> 
       this.logger.log(`Health check record created with ID: ${result[0].id}`);
       return result[0] as HealthCheckRecord;
     } catch (error) {
-      this.logger.error(`Error creating health check record: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error creating health check record: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -61,10 +66,15 @@ export class HealthCheckingRepository extends BaseRepository<HealthCheckRecord> 
         .limit(1);
 
       const found = result.length > 0;
-      this.logger.log(`Health check record ${found ? 'found' : 'not found'} with ID: ${id}`);
+      this.logger.log(
+        `Health check record ${found ? 'found' : 'not found'} with ID: ${id}`,
+      );
       return found ? (result[0] as HealthCheckRecord) : null;
     } catch (error) {
-      this.logger.error(`Error finding health check record by ID ${id}`, error.stack);
+      this.logger.error(
+        `Error finding health check record by ID ${id}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -97,29 +107,41 @@ export class HealthCheckingRepository extends BaseRepository<HealthCheckRecord> 
         .returning();
 
       const deleted = result.length > 0;
-      this.logger.log(`Health check record ${deleted ? 'deleted' : 'not found'} with ID: ${id}`);
+      this.logger.log(
+        `Health check record ${deleted ? 'deleted' : 'not found'} with ID: ${id}`,
+      );
       return deleted;
     } catch (error) {
-      this.logger.error(`Error deleting health check record with ID ${id}`, error.stack);
+      this.logger.error(
+        `Error deleting health check record with ID ${id}`,
+        error.stack,
+      );
       throw error;
     }
   }
 
   async deleteOlderThan(minutes: number): Promise<number> {
-    this.logger.log(`Deleting health check records older than ${minutes} minutes`);
+    this.logger.log(
+      `Deleting health check records older than ${minutes} minutes`,
+    );
 
     try {
       const cutoffTime = new Date(Date.now() - minutes * 60 * 1000);
-      
+
       const result = await this.db
         .delete(healthChecking)
         .where(lt(healthChecking.createdAt, cutoffTime))
         .returning();
 
-      this.logger.log(`Deleted ${result.length} health check records older than ${minutes} minutes`);
+      this.logger.log(
+        `Deleted ${result.length} health check records older than ${minutes} minutes`,
+      );
       return result.length;
     } catch (error) {
-      this.logger.error(`Error deleting old health check records: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error deleting old health check records: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -133,16 +155,23 @@ export class HealthCheckingRepository extends BaseRepository<HealthCheckRecord> 
         .where(eq(healthChecking.service, service))
         .returning();
 
-      this.logger.log(`Deleted ${result.length} health check records for service: ${service}`);
+      this.logger.log(
+        `Deleted ${result.length} health check records for service: ${service}`,
+      );
       return result.length;
     } catch (error) {
-      this.logger.error(`Error deleting health check records for service ${service}`, error.stack);
+      this.logger.error(
+        `Error deleting health check records for service ${service}`,
+        error.stack,
+      );
       throw error;
     }
   }
 
   async getLatestByService(service: string): Promise<HealthCheckRecord | null> {
-    this.logger.log(`Finding latest health check record for service: ${service}`);
+    this.logger.log(
+      `Finding latest health check record for service: ${service}`,
+    );
 
     try {
       const result = await this.db
@@ -153,10 +182,15 @@ export class HealthCheckingRepository extends BaseRepository<HealthCheckRecord> 
         .limit(1);
 
       const found = result.length > 0;
-      this.logger.log(`Latest health check record ${found ? 'found' : 'not found'} for service: ${service}`);
+      this.logger.log(
+        `Latest health check record ${found ? 'found' : 'not found'} for service: ${service}`,
+      );
       return found ? (result[0] as HealthCheckRecord) : null;
     } catch (error) {
-      this.logger.error(`Error finding latest health check record for service ${service}`, error.stack);
+      this.logger.error(
+        `Error finding latest health check record for service ${service}`,
+        error.stack,
+      );
       throw error;
     }
   }

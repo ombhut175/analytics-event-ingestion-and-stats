@@ -36,9 +36,13 @@ export class EnvLoader {
       // Check if any environment files were loaded
       if (this.loadedFiles.length === 0) {
         console.log('⚠️  No environment files found (.env.local or .env)');
-        console.log('💡 Create .env.local for local development or .env for shared configuration');
+        console.log(
+          '💡 Create .env.local for local development or .env for shared configuration',
+        );
       } else {
-        console.log(`✅ Environment files loaded: ${this.loadedFiles.join(', ')}`);
+        console.log(
+          `✅ Environment files loaded: ${this.loadedFiles.join(', ')}`,
+        );
       }
 
       // Verify that required variables are loaded
@@ -55,14 +59,18 @@ export class EnvLoader {
       'DATABASE_PORT',
       'DATABASE_NAME',
       'DATABASE_USER',
-      'DATABASE_PASSWORD'
+      'DATABASE_PASSWORD',
     ];
 
-    const missingVars = requiredVars.filter(varName => !process.env[varName]);
-    
+    const missingVars = requiredVars.filter((varName) => !process.env[varName]);
+
     if (missingVars.length > 0) {
-      console.warn(`⚠️  Missing optional environment variables: ${missingVars.join(', ')}`);
-      console.warn('💡 Please check your .env.local or .env file if using individual database parameters');
+      console.warn(
+        `⚠️  Missing optional environment variables: ${missingVars.join(', ')}`,
+      );
+      console.warn(
+        '💡 Please check your .env.local or .env file if using individual database parameters',
+      );
     } else {
       console.log('✅ All database environment variables are loaded');
     }

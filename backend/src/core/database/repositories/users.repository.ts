@@ -29,7 +29,7 @@ export class UsersRepository extends BaseRepository<UserEntity> {
 
   async create(userData: CreateUserDto): Promise<UserEntity> {
     this.logger.log('Creating new user');
-    
+
     try {
       const result = await this.db
         .insert(users)
@@ -63,7 +63,7 @@ export class UsersRepository extends BaseRepository<UserEntity> {
 
   async update(id: string, userData: UpdateUserDto): Promise<UserEntity> {
     this.logger.log(`Updating user: ${id}`);
-    
+
     try {
       const updateData: any = {
         updatedAt: new Date(),
@@ -90,7 +90,7 @@ export class UsersRepository extends BaseRepository<UserEntity> {
 
   async delete(id: string): Promise<void> {
     this.logger.log(`Deleting user: ${id}`);
-    
+
     try {
       const result = await this.db
         .delete(users)
@@ -101,7 +101,7 @@ export class UsersRepository extends BaseRepository<UserEntity> {
         this.logger.warn(`User not found for deletion: ${id}`);
         throw new Error(MESSAGES.USER_NOT_FOUND);
       }
-      
+
       this.logger.log(`User deleted successfully: ${id}`);
     } catch (error) {
       this.logger.error(`Failed to delete user: ${id}`, error.stack);

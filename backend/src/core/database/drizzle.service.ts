@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool, PoolConfig } from 'pg';
@@ -16,7 +21,7 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
     try {
       this.pool = new Pool(this.getPoolConfig());
       this.db = drizzle(this.pool);
-      
+
       // Test the connection
       await this.pool.query('SELECT 1');
       this.logger.log('Database connection established successfully');
@@ -35,7 +40,7 @@ export class DrizzleService implements OnModuleInit, OnModuleDestroy {
 
   private getPoolConfig(): PoolConfig {
     const databaseUrl = this.configService.get<string>(ENV.DATABASE_URL);
-    
+
     if (databaseUrl) {
       return { connectionString: databaseUrl };
     }

@@ -38,14 +38,17 @@ export class HealthCheckController {
   async getHealthCheckStatus() {
     try {
       const stats = await this.healthCheckCronService.getHealthCheckStats();
-      
+
       return {
         message: 'Health check status retrieved successfully',
         stats,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error(`Error getting health check status: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error getting health check status: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -66,15 +69,18 @@ export class HealthCheckController {
   async triggerHealthCheck() {
     try {
       this.logger.log('Manual health check trigger requested');
-      
+
       await this.healthCheckCronService.triggerHealthCheck();
-      
+
       return {
         message: 'Health check triggered successfully',
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error(`Error triggering health check: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error triggering health check: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -139,13 +145,15 @@ export class HealthCheckController {
 
       this.logger.log(`Cron job test completed in ${executionTime}ms`);
       return response;
-
     } catch (error) {
       const endTime = Date.now();
       const executionTime = endTime - startTime;
-      
-      this.logger.error(`Error testing cron job function: ${error.message}`, error.stack);
-      
+
+      this.logger.error(
+        `Error testing cron job function: ${error.message}`,
+        error.stack,
+      );
+
       return {
         message: 'Cron job function test failed',
         success: false,
@@ -193,7 +201,7 @@ export class HealthCheckController {
   async getHealthCheckRecords() {
     try {
       const records = await this.healthCheckingRepository.findAll(50); // Get last 50 records
-      
+
       return {
         message: 'Health check records retrieved successfully',
         records,
@@ -201,7 +209,10 @@ export class HealthCheckController {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error(`Error getting health check records: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error getting health check records: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }

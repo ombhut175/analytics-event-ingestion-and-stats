@@ -5,10 +5,7 @@ import { HealthCheckCronService } from './health-check-cron.service';
 import { HealthCheckController } from './health-check.controller';
 
 @Module({
-  imports: [
-    ScheduleModule.forRoot(),
-    DatabaseModule,
-  ],
+  imports: [ScheduleModule.forRoot(), DatabaseModule],
   controllers: [HealthCheckController],
   providers: [HealthCheckCronService],
   exports: [HealthCheckCronService],

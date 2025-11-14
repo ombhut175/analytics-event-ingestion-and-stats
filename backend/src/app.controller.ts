@@ -13,22 +13,25 @@ export class AppController {
 
   @Get()
   @ApiOperation({ summary: 'Get hello message' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Hello message retrieved successfully',
     schema: {
       type: 'object',
       properties: {
         statusCode: { type: 'number', example: 200 },
         success: { type: 'boolean', example: true },
-        message: { type: 'string', example: 'Hello message retrieved successfully' },
-        data: { type: 'string', example: 'Hello World!' }
-      }
-    }
+        message: {
+          type: 'string',
+          example: 'Hello message retrieved successfully',
+        },
+        data: { type: 'string', example: 'Hello World!' },
+      },
+    },
   })
   getHello() {
     this.logger.log('Hello endpoint called');
-    
+
     try {
       const message = this.appService.getHello();
       this.logger.log('Hello message retrieved successfully');

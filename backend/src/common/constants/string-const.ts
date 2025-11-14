@@ -9,7 +9,7 @@ export enum ENV {
   SWAGGER_UI_DOC_EXPANSION = 'SWAGGER_UI_DOC_EXPANSION',
   SWAGGER_UI_FILTER = 'SWAGGER_UI_FILTER',
   COOKIE_DOMAIN = 'COOKIE_DOMAIN',
-  
+
   // Database Configuration
   DATABASE_URL = 'DATABASE_URL',
   DATABASE_HOST = 'DATABASE_HOST',
@@ -17,7 +17,7 @@ export enum ENV {
   DATABASE_NAME = 'DATABASE_NAME',
   DATABASE_USER = 'DATABASE_USER',
   DATABASE_PASSWORD = 'DATABASE_PASSWORD',
-  
+
   // Redis Configuration (for BullMQ)
   REDIS_HOST = 'REDIS_HOST',
   REDIS_PORT = 'REDIS_PORT',
@@ -32,7 +32,7 @@ export enum MESSAGES {
   CREATED = 'Created',
   UPDATED = 'Updated',
   DELETED = 'Deleted',
-  
+
   // Errors
   UNEXPECTED_ERROR = 'Unexpected error occurred',
   VALIDATION_ERROR = 'Validation error',
@@ -40,7 +40,7 @@ export enum MESSAGES {
   USER_NOT_FOUND = 'User not found',
   UNAUTHORIZED = 'Unauthorized',
   FORBIDDEN = 'Forbidden',
-  
+
   // Database
   DATABASE_CONNECTION_ERROR = 'Failed to connect to database',
   DATABASE_QUERY_ERROR = 'Database query failed',

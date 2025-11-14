@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './core/database/database.module';
 import { TestModule } from './modules/test/test.module';
 import { HealthCheckModule } from './modules/health-check/health-check.module';
+import { BullmqModule } from './modules/bullmq/bullmq.module';
 import { envValidationSchema } from './config/env.validation';
 
 @Module({
@@ -22,6 +23,7 @@ import { envValidationSchema } from './config/env.validation';
     DatabaseModule,
     TestModule,
     HealthCheckModule,
+    BullmqModule,
   ],
   controllers: [AppController],
   providers: [AppService],

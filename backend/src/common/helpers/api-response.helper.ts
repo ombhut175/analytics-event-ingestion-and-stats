@@ -26,7 +26,11 @@ export const deletedResponse = (message = 'Deleted') => ({
   data: null,
 });
 
-export const errorResponse = (statusCode: number, message: string, path?: string) => ({
+export const errorResponse = (
+  statusCode: number,
+  message: string,
+  path?: string,
+) => ({
   statusCode,
   message,
   timestamp: new Date().toISOString(),

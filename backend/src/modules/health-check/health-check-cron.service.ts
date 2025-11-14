@@ -7,7 +7,9 @@ export class HealthCheckCronService {
   private readonly logger = new Logger(HealthCheckCronService.name);
   private readonly SERVICE_NAME = 'cron-health-check';
 
-  constructor(private readonly healthCheckingRepository: HealthCheckingRepository) {}
+  constructor(
+    private readonly healthCheckingRepository: HealthCheckingRepository,
+  ) {}
 
   /**
    * Runs every 12 minutes
@@ -24,21 +26,23 @@ export class HealthCheckCronService {
     try {
       // Step 1: Add a new health check record
       const newRecord = await this.addHealthCheckRecord();
-      
+
       // Step 2: Clean up old records (keep only records from last 2 hours for example)
       const deletedCount = await this.cleanupOldRecords();
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       this.logger.log(
         `Health check cron job completed successfully in ${duration}ms. ` +
-        `Added record ID: ${newRecord.id}, Deleted ${deletedCount} old records.`
+          `Added record ID: ${newRecord.id}, Deleted ${deletedCount} old records.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Health check cron job failed: ${error.message}`,
+        error.stack,
       );
 
-    } catch (error) {
-      this.logger.error(`Health check cron job failed: ${error.message}`, error.stack);
-      
       // Try to log the failure as a health check record
       try {
         await this.healthCheckingRepository.create({
@@ -62,7 +66,7 @@ export class HealthCheckCronService {
    */
   private async addHealthCheckRecord() {
     const systemInfo = await this.getSystemInfo();
-    
+
     const record = await this.healthCheckingRepository.create({
       service: this.SERVICE_NAME,
       status: 'HEALTHY',
@@ -84,9 +88,10 @@ export class HealthCheckCronService {
    */
   private async cleanupOldRecords(): Promise<number> {
     const RETENTION_MINUTES = 120; // 2 hours
-    
-    const deletedCount = await this.healthCheckingRepository.deleteOlderThan(RETENTION_MINUTES);
-    
+
+    const deletedCount =
+      await this.healthCheckingRepository.deleteOlderThan(RETENTION_MINUTES);
+
     if (deletedCount > 0) {
       this.logger.log(`Cleaned up ${deletedCount} old health check records`);
     } else {
@@ -181,11 +186,10 @@ export class HealthCheckCronService {
 
       this.logger.log(
         `Test execution completed successfully in ${totalTime}ms. ` +
-        `Added record ID: ${newRecord.id}, Deleted ${deletedCount} old records.`
+          `Added record ID: ${newRecord.id}, Deleted ${deletedCount} old records.`,
       );
 
       return results;
-
     } catch (error) {
       this.logger.error(`Test execution failed: ${error.message}`, error.stack);
       throw error;
@@ -198,8 +202,13 @@ export class HealthCheckCronService {
   async getHealthCheckStats() {
     try {
       const totalRecords = await this.healthCheckingRepository.countRecords();
-      const serviceRecords = await this.healthCheckingRepository.countByService(this.SERVICE_NAME);
-      const latestRecord = await this.healthCheckingRepository.getLatestByService(this.SERVICE_NAME);
+      const serviceRecords = await this.healthCheckingRepository.countByService(
+        this.SERVICE_NAME,
+      );
+      const latestRecord =
+        await this.healthCheckingRepository.getLatestByService(
+          this.SERVICE_NAME,
+        );
 
       return {
         totalRecords,
@@ -208,7 +217,10 @@ export class HealthCheckCronService {
         lastCheckAt: latestRecord?.checkedAt || null,
       };
     } catch (error) {
-      this.logger.error(`Error getting health check stats: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error getting health check stats: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
